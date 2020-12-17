@@ -49,7 +49,7 @@ static void stop(int signum){
 static void registration_state_changed(struct _LinphoneCore *lc, LinphoneProxyConfig *cfg, LinphoneRegistrationState cstate, const char *message){
 		printf("New registration state %s for user id [%s] at proxy [%s]\n"
 				,linphone_registration_state_to_string(cstate)
-				,linphone_proxy_config_get_identity(cfg)
+				,linphone_address_get_display_name(linphone_proxy_config_get_identity_address(cfg))
 				,linphone_proxy_config_get_addr(cfg));
 }
 
@@ -66,7 +66,7 @@ int main(int argc, char *argv[]){
 	// adjusting transports configuration
 	// a zero value port for a given transport means the transport is not used
 	linphone_transports_set_udp_port(transports, 0);
-	linphone_transports_set_tcp_port(transports, 5060);
+	linphone_transports_set_tcp_port(transports, -1);
 
 	LinphoneProxyConfig* proxy_cfg;
 	LinphoneAddress *from;
@@ -158,7 +158,10 @@ int main(int argc, char *argv[]){
 
 end:
 	printf("Shutting down...\n");
-	linphone_core_destroy(lc);
+	// DEPRECATED:
+	// linphone_core_destroy(lc);
+
+	linphone_core_unref(lc);
 	printf("Exited\n");
 	return 0;
 }
