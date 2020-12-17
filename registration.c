@@ -65,8 +65,8 @@ int main(int argc, char *argv[]){
 	LinphoneTransports *transports = linphone_factory_create_transports(factory);
 	// adjusting transports configuration
 	// a zero value port for a given transport means the transport is not used
-	linphone_transports_set_udp_port(transports, 0);
-	linphone_transports_set_tcp_port(transports, -1);
+	linphone_transports_set_udp_port(transports, LC_SIP_TRANSPORT_DISABLED);
+	linphone_transports_set_tcp_port(transports, 5060);
 
 	LinphoneProxyConfig* proxy_cfg;
 	LinphoneAddress *from;
@@ -114,8 +114,16 @@ int main(int argc, char *argv[]){
 	// add transports
 	linphone_core_set_transports(lc, transports);
 
+	// int tcp_port = linphone_core_get_transports_used(lc)->tcp_port;
+	// int udp_port = linphone_core_get_transports_used(lc)->udp_port;
+
+	// printf("core's transports used tcp port: %s", tcp_port);
+	// printf("core's transports used udp port: %s", udp_port);
+	printf("core's transports: %s", linphone_core_get_transports_used(lc));
+
 	/*create proxy config*/
 	proxy_cfg = linphone_core_create_proxy_config(lc);
+	printf("proxy transport: %s \n", linphone_proxy_config_get_transport(proxy_cfg));
 	/*parse identity*/
 	from = linphone_address_new(identity);
 	if (from==NULL){
