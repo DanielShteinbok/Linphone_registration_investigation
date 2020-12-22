@@ -124,6 +124,8 @@ int main(int argc, char *argv[]){
 	/*create proxy config*/
 	proxy_cfg = linphone_core_create_proxy_config(lc);
 	printf("proxy transport: %s \n", linphone_proxy_config_get_transport(proxy_cfg));
+	// above is printing (null) for some unknown reason
+
 	/*parse identity*/
 	from = linphone_address_new(identity);
 	if (from==NULL){
@@ -137,15 +139,18 @@ int main(int argc, char *argv[]){
 
 	// configure proxy entries
 	linphone_proxy_config_set_identity_address(proxy_cfg,from); /*set identity with user name and domain*/
+	printf("proxy transport after setting identity address: %s \n", linphone_proxy_config_get_transport(proxy_cfg));
 	server_addr = linphone_address_get_domain(from); /*extract domain address from identity*/
 	linphone_proxy_config_set_server_addr(proxy_cfg,server_addr); /* we assume domain = proxy server address*/
+	printf("proxy transport after linphone_proxy_config_set_server_addr: %s \n", linphone_proxy_config_get_transport(proxy_cfg));
 	linphone_proxy_config_enable_register(proxy_cfg,TRUE); /*activate registration for this proxy config*/
+	printf("proxy transport after linphone_proxy_config_enable_register: %s \n", linphone_proxy_config_get_transport(proxy_cfg));
 	linphone_address_unref(from); /*release resource*/
 
 	linphone_core_add_proxy_config(lc,proxy_cfg); /*add proxy config to linphone core*/
+	printf("proxy transport after linphone_core_add_proxy_config: %s \n", linphone_proxy_config_get_transport(proxy_cfg));
 	linphone_core_set_default_proxy_config(lc,proxy_cfg); /*set to default proxy*/
-	
-	printf("proxy transport: %s \n", linphone_proxy_config_get_transport(proxy_cfg));
+	printf("proxy transport after linphone_core_set_default_proxy_config: %s \n", linphone_proxy_config_get_transport(proxy_cfg));
 
 	/* main loop for receiving notifications and doing background linphonecore work: */
 	while(running){
