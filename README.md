@@ -113,6 +113,8 @@ printf("core's transports after adding proxy_config: tcp:%i, udp:%i\n", linphone
 linphone_core_iterate(lc); /* first iterate initiates registration */
 ```
 
+see commit 3297406e717b130e149e8e458c14fefeb6389430 for the original code (in registration.c).
+
 The important things in the above are that:
 * `proxy_cfg`'s transports are not set to anything until the server address is set
 * Afterwards, `proxy_cfg`'s transports are set to udp
@@ -128,5 +130,113 @@ In fact, there seems to be no function at all to set the transport method for th
 To answer this, I began by trying to figure out how the transport method is actually stored.
 To figure _that_ out, I looked at the code for `linphone_proxy_config_get_transport()`.
 
-`linphone_proxy_config_get_transport()` is defined in 
-(see commit 3297406e717b130e149e8e458c14fefeb6389430).
+`linphone_proxy_config_get_transport()` is defined in [liblinphone/coreapi/proxy.c](https://github.com/BelledonneCommunications/liblinphone/blob/master/coreapi/proxy.c)
+as:
+```c
+const char* linphone_proxy_config_get_transport(const LinphoneProxyConfig *cfg) {
+	const char* addr=NULL;
+	const char* ret="udp"; /*default value*/
+	const SalAddress* route_addr=NULL;
+	bool_t destroy_route_addr = FALSE;
+
+	if (linphone_proxy_config_get_service_route(cfg)) {
+		route_addr = L_GET_CPP_PTR_FROM_C_OBJECT(linphone_proxy_config_get_service_route(cfg))->getInternalAddress();
+	} else if (linphone_proxy_config_get_route(cfg)) {
+		addr=linphone_proxy_config_get_route(cfg);
+	} else if(linphone_proxy_config_get_addr(cfg)) {
+		addr=linphone_proxy_config_get_addr(cfg);
+	} else {
+		ms_error("Cannot guess transport for proxy with identity [%s]", cfg->reg_identity);
+		return NULL;
+	}
+
+	if (!route_addr) {
+		if (!((*(SalAddress **)&route_addr) = sal_address_new(addr)))
+			return NULL;
+		destroy_route_addr = TRUE;
+	}
+
+	ret=sal_transport_to_string(sal_address_get_transport(route_addr));
+	if (destroy_route_addr)
+		sal_address_unref((SalAddress *)route_addr);
+
+	return ret;
+}
+```
+This explains the first and second points above; if `linphone_proxy_config_get_route(cfg)` returns something
+that isn't NULL or null or false (which would probably be/evidently is the case after `linphone_proxy_config_set_server_addr()`
+is called. However, since `route_addr` is only changed if `linphone_proxy_config_get_service_route(cfg)` evaluates
+to true, and `sal_address_get_transport` (defined in [liblinphone/coreapi/bellesip\_sal/sal\_address\_impl.c](https://github.com/BelledonneCommunications/liblinphone/blob/master/coreapi/bellesip_sal/sal_address_impl.c)
+as returning `SalTransportUDP` if the address passed is null, `linphone_proxy_config_get_transport` could only return something
+non-NULL, non-udp if `linphone_proxy_config_get_service_route(cfg)` returns something that evaluates to true. When the `server_addr`
+was not set, the function returned NULL and threw the error descibed above, but after the `server_addr` was set it started to directly
+return udp.
+
+`linphone_proxy_config_get_service_route` is defined in [liblinphone/src/sal/op.h](https://github.com/BelledonneCommunications/liblinphone/blob/master/src/sal/op.h) as simply returning `mServiceRoute`
+
+`mServiceRoute` is changed in `SalOp::setServiceRoute` in [liblinphone/src/sal/op.cpp](https://github.com/BelledonneCommunications/liblinphone/blob/master/src/sal/op.cpp)
+
+`SalOp::setServiceRoute` is called from `SalRegisterOp::registerRefresherListener` in [liblinphone/src/sal/register-op.cpp](https://github.com/BelledonneCommunications/liblinphone/blob/master/src/sal/register-op.cpp) if the third argument is equal to `200`.
+
+`SalRegisterOp::registerRefresherListener` is passed as the last argument (`listener`) to `SalOp::sendRequestAndCreateRefresher()` 
+(in [liblinphone/src/sal/op.cpp](https://github.com/BelledonneCommunications/liblinphone/blob/master/src/sal/op.cpp))
+by `SalRegisterOp::sendRegister` (in [liblinphone/src/sal/op.cpp](https://github.com/BelledonneCommunications/liblinphone/blob/master/src/sal/register-op.cpp)
+
+`SalOp::sendRequestAndCreateRefresher` (on line 690) passes `listener` as the second argument to `belle_sip_refresher_set_listener(mRefresher, listener, this)`
+
+`belle_sip_refresher_set_listener` is defined in [belle-sip/src/refresher.c](https://github.com/BelledonneCommunications/belle-sip/blob/master/src/refresher.c) as:
+
+```c
+void belle_sip_refresher_set_listener(belle_sip_refresher_t* refresher, belle_sip_refresher_listener_t listener,void* user_pointer) {
+	refresher->listener=listener;
+	refresher->user_data=user_pointer;
+}
+```
+On a different note, there is a `linphone_proxy_config_set_routes()` defined in [liblinphone/coreapi/proxy.c](https://github.com/BelledonneCommunications/liblinphone/blob/master/coreapi/proxy.c),
+documented in 
+[the Proxies module of the documentation](https://linphone.org/snapshots/docs/liblinphone/4.5.0/c/group__proxies.html#ga46f8e03a3fa4e408209f8438639376c0),
+which is defined as follows:
+```c
+LinphoneStatus linphone_proxy_config_set_routes(LinphoneProxyConfig *cfg, const bctbx_list_t *routes) {
+	if (cfg->reg_routes != NULL) {
+		bctbx_list_free_with_data(cfg->reg_routes, ms_free);
+		cfg->reg_routes = NULL;
+	}
+	bctbx_list_t *iterator = (bctbx_list_t *)routes;
+	while (iterator != NULL) {
+		char *route = (char *)bctbx_list_get_data(iterator);
+		if (route != NULL && route[0] !='\0') {
+			SalAddress *addr;
+			char *tmp;
+			/*try to prepend 'sip:' */
+			if (strstr(route,"sip:") == NULL && strstr(route,"sips:") == NULL) {
+				tmp = ms_strdup_printf("sip:%s",route);
+			} else {
+				tmp = ms_strdup(route);
+			}
+			addr = sal_address_new(tmp);
+			if (addr != NULL) {
+				sal_address_unref(addr);
+				cfg->reg_routes = bctbx_list_append(cfg->reg_routes, tmp);
+			} else {
+				ms_free(tmp);
+				return -1;
+			}
+		}
+		iterator = bctbx_list_next(iterator);
+	}
+	return 0;
+}
+```
+
+Unfortunately, there is no documentation on how to specify the `routes` etc, so using this will require a bit more digging.
+Additionally, I have no idea as to whether or not this would solve the issue at hand at all.
+
+**Remaining questions:
+* How do the transport settings of the LinphoneCore and LinphoneProxyConfig relate? Which is used when registering?
+* How does one set the transport method of the LinphoneProxyConfig to TCP/whatever instead of UDP?
+* What does the `linphone_proxy_config_set_routes` function have to do with the transport method? How does one call this function (what is `routes`)?
+**
+
+
+
