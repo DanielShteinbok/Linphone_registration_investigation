@@ -58,4 +58,75 @@ mystery) keep reading below:
 LinphoneTransports object is created, configured to set the UDP port to 0 (disable it) and the tcp port to 5060.
 This LinphoneTransports struct is then set as the transport for the LinphoneCore being used.
 It is confirmed that the LinphoneCore's port settings are as intended. A LinphoneProxyConfig is created and set
-for linphone core
+for linphone core. The LinphoneProxyConfig's transports are checked, returns UDP (before setting the domain,
+returns null. After setting the domain (calling `linphone_proxy_config_set_server_addr()`)), returns UDP. Gives an error:
+```
+liblinphone-error-Cannot guess transport for proxy with identity [sip:daniel@parsedata.xyz]
+```
+.
+Here is a part of the code. "Part" is a key word here; there is other authentication stuff that happens with the proxy config that
+isn't relevant to the transports stuff, so it was omitted. The code will not run.
+
+```c
+LinphoneFactory *factory = linphone_factory_get();
+LinphoneTransports *transports = linphone_factory_create_transports(factory);
+linphone_transports_set_udp_port(transports, LC_SIP_TRANSPORT_DISABLED);
+// LC_SIP_TRANSPORT_DISABLED is a preprocessor macro for 0
+linphone_transports_set_tcp_port(transports, 5060);
+
+LinphoneProxyConfig* proxy_cfg;	
+LinphoneAddress *from;
+LinphoneAuthInfo *info;
+	
+char* identity="sip:daniel@parsedata.xyz";
+char* password="123456";
+// in the code, both of the above are entered as command line arguments, but hardcoded here for simplicity
+
+LinphoneCore *lc = linphone_factory_create_core_3(factory, NULL, NULL, NULL);
+
+printf("core's transports: tcp:%i, udp:%i\n", linphone_transports_get_tcp_port(linphone_core_get_transports_used(lc)), 
+linphone_transports_get_udp_port(linphone_core_get_transports_used(lc)));
+// The above prints: core's transports: tcp:5060, udp:0
+// evidently the LinphoneCore is set to use tcp and not udp
+
+proxy_cfg = linphone_core_create_proxy_config(lc);
+printf("proxy transport: %s \n", linphone_proxy_config_get_transport(proxy_cfg));
+// prints: proxy transport: (null)
+
+from = linphone_address_new(identity);
+linphone_proxy_config_set_identity_address(proxy_cfg,from); /*set identity with user name and domain*/
+// linphone_proxy_config_get_transport(proxy_cfg) would still return null
+
+linphone_proxy_config_set_server_addr(proxy_cfg,server_addr); /* we assume domain = proxy server address*/
+// AHAH! linphone_proxy_config_get_transport(proxy_cfg) returns "udp"
+
+linphone_proxy_config_enable_register(proxy_cfg, TRUE); /*activate registration for this proxy config*/
+
+linphone_core_add_proxy_config(lc,proxy_cfg); /*IMPORTANT PART: add proxy config to linphone core*/
+linphone_core_set_default_proxy_config(lc,proxy_cfg); /*set to default proxy*/
+
+printf("core's transports after adding proxy_config: tcp:%i, udp:%i\n", linphone_transports_get_tcp_port(linphone_core_get_transports_used(lc)), 
+	linphone_transports_get_udp_port(linphone_core_get_transports_used(lc)));
+// above prints: core's transports after adding proxy_config: tcp:5060, udp:0
+
+// run in a while loop to maintain registration in the code, but put here once so you get the point
+linphone_core_iterate(lc); /* first iterate initiates registration */
+```
+
+The important things in the above are that:
+* `proxy_cfg`'s transports are not set to anything until the server address is set
+* Afterwards, `proxy_cfg`'s transports are set to udp
+* `linphone_core_set_transports` changes the transport method used by the LinphoneCore, but doesn't seem to impact the proxy
+* The LinphoneCore's transport settings stay different from the proxy even after the proxy is set; at the time of writing the
+question remains as to which of the two linphone follows; it appears to be UDP given that the program doesn't register
+
+It is the case that there is a `linphone_proxy_config_get_transport()` function, but there is no equivalent for setting it.
+In fact, there seems to be no function at all to set the transport method for the LinphoneProxyConfig struct!
+
+**The big question: how does one set the transport method for the LinphoneProxyConfig struct?**
+
+To answer this, I began by trying to figure out how the transport method is actually stored.
+To figure _that_ out, I looked at the code for `linphone_proxy_config_get_transport()`.
+
+`linphone_proxy_config_get_transport()` is defined in 
+(see commit 3297406e717b130e149e8e458c14fefeb6389430).
