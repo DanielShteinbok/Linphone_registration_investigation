@@ -58,7 +58,7 @@ mystery) keep reading below:
 <details>
 	<summary>Click here to read about the investigation</summary>
 
-LinphoneTransports object is created, configured to set the UDP port to 0 (disable it) and the tcp port to 5060.
+LinphoneTransports struct is created, configured to set the UDP port to 0 (disable it) and the tcp port to 5060.
 This LinphoneTransports struct is then set as the transport for the LinphoneCore being used.
 
 It is confirmed that the LinphoneCore's port settings are as intended. 
@@ -267,4 +267,4 @@ I included the entire `include/` directory that was created when I built the SDK
 the header files end up (obviously, it should include `linphone/core.h`).
 
 A word of caution: I don't know that this is actually the "correct" way of doing this; it does work, but seems
-a bit "hacky", and I haven't found a better way of doing this in any linphohne documentation.
+a bit "hacky", and I haven't found a better way of doing this in any linphone documentation.
