@@ -245,3 +245,26 @@ Additionally, I have no idea as to whether or not this would solve the issue at 
 
 </details>
 
+## Compilation and Linking
+I built everything with CMake, using the CMakeLists.txt in this project. However, it will probably not work for you!
+Opening it up, you will see that I added four libraries, by shared objects (I am using SO files on linux, if you are
+using archives/static libraries you will probably have to go about this differently):
+* linphone
+* mediastreamer
+* ortp
+* bctoolbox
+
+All of the above seem to be necessary for this program, since I have experimentally seen that the linker throws
+errors if not all of them are included. The other libraries included in the SDK will probably be needed for more
+complicated programs.
+
+I then set the `IMPORTED_LOCATION` property for all of them to the location of the SO file on my computer.
+You will probably need to change this.
+
+I linked all these libraries (duh)
+
+I included the entire `include/` directory that was created when I built the SDK with CMake, this is wherever
+the header files end up (obviously, it should include `linphone/core.h`).
+
+A word of caution: I don't know that this is actually the "correct" way of doing this; it does work, but seems
+a bit "hacky", and I haven't found a better way of doing this in any linphohne documentation.
