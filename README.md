@@ -55,6 +55,8 @@ instead, it decides that the transports being used are UDP. if you like detectiv
 mystery) keep reading below:
 
 ### The Mystery of the Transport Method
+<details>
+	<summary>Click here to read about the investigation</summary>
 LinphoneTransports object is created, configured to set the UDP port to 0 (disable it) and the tcp port to 5060.
 This LinphoneTransports struct is then set as the transport for the LinphoneCore being used.
 It is confirmed that the LinphoneCore's port settings are as intended. A LinphoneProxyConfig is created and set
@@ -237,5 +239,5 @@ Additionally, I have no idea as to whether or not this would solve the issue at 
 * How does one set the transport method of the LinphoneProxyConfig to TCP/whatever instead of UDP?
 * What does the `linphone_proxy_config_set_routes` function have to do with the transport method? How does one call this function (what is `routes`)?
 
-
+</details>
 
