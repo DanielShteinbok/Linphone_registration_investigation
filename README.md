@@ -66,7 +66,6 @@ It is confirmed that the LinphoneCore's port settings are as intended.
 A LinphoneProxyConfig is created and set for linphone core.
 
 The LinphoneProxyConfig's transports are checked, returns UDP (before setting the domain, returns null. 
-
 After setting the domain (calling `linphone_proxy_config_set_server_addr()`)), returns UDP. Gives an error:
 `liblinphone-error-Cannot guess transport for proxy with identity [sip:daniel@parsedata.xyz]`.
 
