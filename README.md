@@ -22,7 +22,7 @@ LinphoneFactory can supposedly be used to change things like logging behaviour.
 **TODO:** describe these LinphoneFactory behaviours more in-depth.
 
 ## The LinphoneCoreCbs:
-This is a typedef for the struct \_LinphoneCbs, which is used for managing information
+This is a typedef for the struct \_LinphoneCbs, which is used for managing
 on callbacks. It is the replacement for LinphoneCoreVTable used in older linphone examples.
 
 Create from the factory with:
@@ -30,4 +30,5 @@ Create from the factory with:
 ```c
 LinphoneCoreCbs* linphone_factory_create_core_cbs(factory);
 ```
+
 
