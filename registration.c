@@ -122,7 +122,6 @@ int main(int argc, char *argv[]){
 	// printf("core's transports used udp port: %s", udp_port);
 	printf("core's transports: tcp:%i, udp:%i\n", linphone_transports_get_tcp_port(linphone_core_get_transports_used(lc)), 
 		linphone_transports_get_udp_port(linphone_core_get_transports_used(lc)));
-	// above causes a segmentation fault (???) HYPOTHESIS: %s is for string, so it looks for \0 and goes out of bounds that way
 
 	/*create proxy config*/
 	proxy_cfg = linphone_core_create_proxy_config(lc);
@@ -155,6 +154,10 @@ int main(int argc, char *argv[]){
 	linphone_core_set_default_proxy_config(lc,proxy_cfg); /*set to default proxy*/
 	printf("proxy transport after linphone_core_set_default_proxy_config: %s \n", linphone_proxy_config_get_transport(proxy_cfg));
 	printf("proxy config routes: %s \n", linphone_proxy_config_get_routes(proxy_cfg));
+
+	printf("core's transports after adding proxy_config: tcp:%i, udp:%i\n", linphone_transports_get_tcp_port(linphone_core_get_transports_used(lc)), 
+		linphone_transports_get_udp_port(linphone_core_get_transports_used(lc)));
+
 
 	/* main loop for receiving notifications and doing background linphonecore work: */
 	while(running){
