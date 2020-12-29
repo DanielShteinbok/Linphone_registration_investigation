@@ -261,7 +261,7 @@ complicated programs.
 I then set the `IMPORTED_LOCATION` property for all of them to the location of the SO file on my computer.
 You will probably need to change this.
 
-I linked all these libraries (duh)
+I linked all these libraries
 
 I included the entire `include/` directory that was created when I built the SDK with CMake, this is wherever
 the header files end up (obviously, it should include `linphone/core.h`).
