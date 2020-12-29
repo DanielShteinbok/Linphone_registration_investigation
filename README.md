@@ -232,11 +232,10 @@ LinphoneStatus linphone_proxy_config_set_routes(LinphoneProxyConfig *cfg, const 
 Unfortunately, there is no documentation on how to specify the `routes` etc, so using this will require a bit more digging.
 Additionally, I have no idea as to whether or not this would solve the issue at hand at all.
 
-**Remaining questions:
+**Remaining questions:**
 * How do the transport settings of the LinphoneCore and LinphoneProxyConfig relate? Which is used when registering?
 * How does one set the transport method of the LinphoneProxyConfig to TCP/whatever instead of UDP?
 * What does the `linphone_proxy_config_set_routes` function have to do with the transport method? How does one call this function (what is `routes`)?
-**
 
 
 
