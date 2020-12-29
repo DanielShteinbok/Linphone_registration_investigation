@@ -62,9 +62,9 @@ This LinphoneTransports struct is then set as the transport for the LinphoneCore
 It is confirmed that the LinphoneCore's port settings are as intended. A LinphoneProxyConfig is created and set
 for linphone core. The LinphoneProxyConfig's transports are checked, returns UDP (before setting the domain,
 returns null. After setting the domain (calling `linphone_proxy_config_set_server_addr()`)), returns UDP. Gives an error:
-```
+`
 liblinphone-error-Cannot guess transport for proxy with identity [sip:daniel@parsedata.xyz]
-```
+`
 .
 Here is a part of the code. "Part" is a key word here; there is other authentication stuff that happens with the proxy config that
 isn't relevant to the transports stuff, so it was omitted. The code will not run.
