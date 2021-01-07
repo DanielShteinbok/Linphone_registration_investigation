@@ -242,6 +242,13 @@ Additionally, I have no idea as to whether or not this would solve the issue at 
 * How does one set the transport method of the LinphoneProxyConfig to TCP/whatever instead of UDP?
 * What does the `linphone_proxy_config_set_routes` function have to do with the transport method? How does one call this function (what is `routes`)?
 
+**Updates:**
+It seems that `LinphoneTransports` only changes the ports used on the host computer (in the User Agent), not the proxy port.
+The current issue is that it turns out that `linphone_core_iterate()` does not send out a `REGISTER` request at all!
+(verified via Wireshark)
+
+Ports were not closed etc, will have to investigate more...
+
 </details>
 
 ## Compilation and Linking
@@ -267,3 +274,7 @@ the header files end up (obviously, it should include `linphone/core.h`).
 
 A word of caution: I don't know that this is actually the "correct" way of doing this; it does work, but seems
 a bit "hacky", and I haven't found a better way of doing this in any linphone documentation.
+
+## Current problem:
+`LinphoneProxyConfig` is set up to register, and `linphone_proxy_config_register_enabled()` returns `true` every time.
+However, no sip packet (REGISTER) is ever sent out when `linphone_core_iterate()` is called. To be investigated...

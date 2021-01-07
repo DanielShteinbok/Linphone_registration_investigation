@@ -107,7 +107,8 @@ int main(int argc, char *argv[]){
 
 	// configure proxy entries
 
-	linphone_proxy_config_edit(proxy_cfg); /*start editing proxy configuration*/
+	// below is not needed if linphone proxy config has not been added to the linphone core
+	//linphone_proxy_config_edit(proxy_cfg); /*start editing proxy configuration*/
 	linphone_proxy_config_set_identity_address(proxy_cfg,from); /*set identity with user name and domain*/
 	printf("proxy transport after setting identity address: %s \n", linphone_proxy_config_get_transport(proxy_cfg));
 	server_addr = linphone_address_get_domain(from); /*extract domain address from identity*/
@@ -115,7 +116,8 @@ int main(int argc, char *argv[]){
 	printf("proxy transport after linphone_proxy_config_set_server_addr: %s \n", linphone_proxy_config_get_transport(proxy_cfg));
 	linphone_proxy_config_enable_register(proxy_cfg,TRUE); /*activate registration for this proxy config*/
 	printf("proxy transport after linphone_proxy_config_enable_register: %s \n", linphone_proxy_config_get_transport(proxy_cfg));
-	linphone_proxy_config_done(proxy_cfg); /*initiate REGISTER with expire = 0*/
+	//linphone_proxy_config_done(proxy_cfg); /*initiate REGISTER with expire = 0*/
+	// the above is not necessary if proxy config is not added to linphone core
 
 	linphone_address_unref(from); /*release resource*/
 
@@ -128,9 +130,13 @@ int main(int argc, char *argv[]){
 	printf("core's transports after adding proxy_config: tcp:%i, udp:%i\n", linphone_transports_get_tcp_port(linphone_core_get_transports_used(lc)), 
 		linphone_transports_get_udp_port(linphone_core_get_transports_used(lc)));
 
-
 	/* main loop for receiving notifications and doing background linphonecore work: */
 	while(running){
+		if (linphone_proxy_config_register_enabled(proxy_cfg))
+			printf("should be registering now\n");
+		else
+			//printf(linphone_proxy_config_get_custom_header(proxy_cfg));
+			printf("seemingly already registered??\n");
 		linphone_core_iterate(lc); /* first iterate initiates registration */
 		ms_usleep(50000);
 		printf("first while loop running\n");
