@@ -91,6 +91,7 @@ int main(int argc, char *argv[]){
 
 	/*create proxy config*/
 	proxy_cfg = linphone_core_create_proxy_config(lc);
+	linphone_proxy_config_edit(proxy_cfg); /*start editing proxy configuration*/
 	printf("proxy transport: %s \n", linphone_proxy_config_get_transport(proxy_cfg));
 	// above is printing (null) for some unknown reason
 
@@ -133,7 +134,6 @@ int main(int argc, char *argv[]){
 	}
 
 	proxy_cfg = linphone_core_get_default_proxy_config(lc); /* get default proxy config*/
-	linphone_proxy_config_edit(proxy_cfg); /*start editing proxy configuration*/
 	linphone_proxy_config_enable_register(proxy_cfg,FALSE); /*de-activate registration for this proxy config*/
 	linphone_proxy_config_done(proxy_cfg); /*initiate REGISTER with expire = 0*/
 
