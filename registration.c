@@ -1,38 +1,3 @@
-
-/*
- * Copyright (c) 2010-2019 Belledonne Communications SARL.
- *
- * This file is part of Liblinphone.
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
-/**
- * @defgroup registration_tutorials Basic registration
- * @ingroup tutorials
- *This program is a _very_ simple usage example of liblinphone.
- *Desmonstrating how to  initiate a SIP registration from a sip uri identity passed from the command line.
- *first argument must be like sip:jehan@sip.linphone.org , second must be password .
- *<br>
- *ex registration sip:jehan@sip.linphone.org secret
- *<br>Registration is cleared on SIGINT
- *<br>
- *@include registration.c
-
- *
- */
-
 #include "linphone/core.h"
 
 #include <signal.h>
@@ -65,8 +30,9 @@ int main(int argc, char *argv[]){
 	LinphoneTransports *transports = linphone_factory_create_transports(factory);
 	// adjusting transports configuration
 	// a zero value port for a given transport means the transport is not used
-	linphone_transports_set_udp_port(transports, LC_SIP_TRANSPORT_DISABLED);
-	linphone_transports_set_tcp_port(transports, 5060);
+	// NEWS: this affects the port used on my machine, NOT the one it connects to remotely
+	linphone_transports_set_udp_port(transports, 5060);
+	//linphone_transports_set_tcp_port(transports, 5060);
 
 	LinphoneProxyConfig* proxy_cfg;
 	LinphoneAddress *from;
